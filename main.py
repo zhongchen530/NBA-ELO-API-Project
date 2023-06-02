@@ -9,6 +9,7 @@ Created on Thu Jun  1 11:01:04 2023
 import getGames
 import writeGames
 
+
 date_range = ["2000-00-00","9999-99-99"]
 df = getGames.get_range(date_range)
 
@@ -18,6 +19,7 @@ password = "mynbaproject"
 database = "mydemodb"
 port = 3306
 
-#writeGames.write_to_db(df = df,database = db, user = user, password = password, host = host)
-writeGames.get_connection(user, password, host, port, databse)
+writeGames.write_to_db(df = df,database = db, user = user, password = password, host = host)
 print("Finished")
+
+

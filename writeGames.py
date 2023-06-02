@@ -13,12 +13,12 @@ class Game(base):
     
     SEASON_ID = Column("season_id",INTEGER)
     TEAM_ID = Column("team_id",INTEGER)
-    TEAM_ABBREVIATION = Column("team_abbreviation",String)
-    TEAM_NAME = Column("team_name",String)
+    TEAM_ABBREVIATION = Column("team_abbreviation",String(6))
+    TEAM_NAME = Column("team_name",String(30))
     GAME_ID = Column("game_id",INTEGER,primary_key = True)
-    GAME_DATE = Column("game_date",String)
-    MATCHUP = Column("matchup",String)
-    WL = Column("wl",String)
+    GAME_DATE = Column("game_date",String(15))
+    MATCHUP = Column("matchup",String(25))
+    WL = Column("wl",String(1))
     
     def __init__(self,season_id,team_id,team_abbreviation,team_name,game_id,game_date,matchup,wl):
         self.SEASON_ID = season_id
@@ -38,19 +38,12 @@ def get_connection(user,password,host,port,database):
     )
     
 def write_to_db(df,user,password,host,port,database):
-    eingine = get_connection(user, password, host, port, database)
-    return
-
-
-    sql = '''
-    create table if not exists GAMES(
-    SEASON_ID varchar(20),
-    TEAM_ID varchar(20),
-    TEAM_ABBREVIATION varchar(6),
-    TEAM_NAME varchar(20),
-    GAME_ID varchar(20),
-    GAME_DATE varchar(12),
-    MATCHUP varchar(20),
-    WL varchar(1)
-    )
-    '''
+    engine = get_connection(user, password, host, port, database)
+    Base.metadata.create_all(bind = engine)
+    Session = sessionmaker(bind = engine)
+    
+    session = Session()
+    for indx,row in df.iterrows():
+        session.add(Game(*row.tolist()))
+    
+    session.commit()

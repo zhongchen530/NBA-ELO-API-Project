@@ -28,5 +28,6 @@ def get_range(date_range):
         teams_df.append(team_df)
 
     teams_df = pd.concat(teams_df,axis = 0)
+    teams_df.drop_duplicates(subset = "GAME_ID",inplace = True)
     return teams_df
     
