@@ -1,12 +1,14 @@
 
 from NBA.models import *
 from nba_api.stats.static import teams,players
-from nba_api.stats.endpoints import leaguegamefinder,playergamelog,playergamelogs
+from nba_api.stats.endpoints import leaguegamefinder,playergamelogs
 from NBA.name_enums import DfColumnNames,TableColumnNames
 import datetime
 import time
 from NBA.nba_api_helper import NBA_ApiHelper
 from NBA.reformat import reformat
+import pandas as pd
+from NBA.name_enums import DfColumnNames,TableColumnNames
 
 def elo_diff(elo1,elo2,wl):
     p1_win = 1/(1+10**((elo2-elo1)/400))
@@ -21,21 +23,23 @@ def elo_diff(elo1,elo2,wl):
 def get_seasons_list():
     return [f"20{str(i).zfill(2)}-{str(i+1).zfill(2)}" for i in range(23)]
 
-def convert_date(date_str):
+def convert_str_to_date(date_str):
     return datetime.datetime.strptime(date_str,'%Y-%m-%d').date()
 
 class ComputeTeams:
-    def write_games():
-        teams_df = NBA_ApiHelper.get_team_games(date_from = "2000-00-00")
-        teams_df = reformat(teams_df,"TEAM_ID")
-        for indx,row in teams_df.iterrows():
-            object = Game(*(row.tolist()))
+    def get_team_games_df(season):
+        team_games = leaguegamefinder.LeagueGameFinder(season_nullable=season)
+        teams_games_df = team_games.get_data_frames()[0]
+        teams_games_df = reformat(teams_games_df,DfColumnNames.TEAM_ID.value)
+        return teams_games_df
+
+    def write_games_with_df(df):
+        for indx,row in df.iterrows():
+            object = Game.objects.create(game_id = row[DfColumnNames.GAME_ID.value],team_id = row[DfColumnNames.TEAM_ID.value + "_x"],game_date = row[DfColumnNames.GAME_DATE.value],opponent_id = row[DfColumnNames.TEAM_ID.value + "_y"])
             object.save()
 
-    def write_team_elo():
-        sort_by = "-"+TableColumnNames.GAME_DATE.value
-        games = Game.objects.order_by(sort_by)
-        for indx,game in enumerate(games):
+    def write_team_elo_with_df(df,elo_diff):
+        for indx,game in df.iterrows():
             try: 
                 team1 = CurrentTeamElo.objects.get(pk = game.team_id)
             except:
@@ -57,28 +61,39 @@ class ComputeTeams:
             helo1.save()
             helo2.save()
 
-class ComputePlayers:
-    def write_player_games():
-        seasons = get_seasons_list()
-        for season in seasons:
-            ComputePlayers.write_season_playergamelogs(season)
+    def compute_team_elo_from_db(elo_diff):
+        sort_by = TableColumnNames.GAME_DATE.value
+        games = Game.objects.order_by(sort_by)
+        df = pd.DataFrame(games.values())
+        ComputeTeams.write_team_elo_with_df(df,elo_diff)
+        
 
-    def write_season_playergamelogs(season):
+class ComputePlayers:
+    def write_playergamelogs_with_df(df):
         player_id_name = DfColumnNames.PLAYER_ID.value
         game_id_name = DfColumnNames.GAME_ID.value
         wl_name =  DfColumnNames.WL.value
         
-        season_game_logs = playergamelogs.PlayerGameLogs(season_nullable=season)
-        df = season_game_logs.get_data_frames()[0]
-        print(df.columns)
         for indx,game in df.iterrows():
             object = PlayerGame(player_id = game[player_id_name],game_id = game[game_id_name],wl = game[wl_name])
             object.save()
 
-    def write_player_elo():
+    def get_playergamelogs_df(season):
+        col_names = [DfColumnNames.PLAYER_ID.value,DfColumnNames.GAME_ID.value,DfColumnNames.WL.value]
+        season_game_logs = playergamelogs.PlayerGameLogs(season_nullable=season)
+        df = season_game_logs.get_data_frames()[0]
+        df = df[col_names]
+        return df
+
+    def compute_player_elo_from_db():
+        games = Game.objects.order_by(TableColumnNames.GAME_DATE.value)
+        df = pd.DataFrame(games.values())
+        ComputePlayers.write_player_elo_with_df(df)
+
+    def write_player_elo_with_df(df):
         today = datetime.date.today()
-        games = Game.objects.order_by("game_date")
-        for indx,game in enumerate(games):
+        df.columns = [col_name.lower() for col_name in df.columns]
+        for indx,game in df.iterrows():
             players_list = PlayerGame.objects.filter(game_id = game.game_id)
             if len(players_list) == 0:
                 continue
@@ -111,14 +126,17 @@ class ComputePlayers:
                 elif player.wl == "L":
                     player_elo.elo -= diff*player_elo.elo/l_team_elo
                 player_elo.save()
-                if today - convert_date(game.game_date) < datetime.timedelta(days=180):
+                if today - convert_str_to_date(game.game_date) < datetime.timedelta(days=180):
                     HistoricalPlayerElo(elo = player_elo.elo,date = game.game_date, player_id = player_elo.player_id).save()
-            if (indx+1)%10000 == 0:
-                print(indx + 1)
 
 def run():
-    ComputeTeams.write_games()
-    ComputeTeams.write_team_elo()
-    ComputePlayers.write_player_games()
-    ComputePlayers.write_player_elo()
+    for season in get_seasons_list():
+        df = ComputeTeams.get_team_games_df(season)
+        ComputeTeams.write_games_with_df(df)
+    ComputeTeams.compute_team_elo_from_db()
+
+    for season in get_seasons_list():
+        df = ComputePlayers.get_playergamelogs_df(season)
+        ComputePlayers.write_playergamelogs_with_df(df)
+    ComputePlayers.compute_player_elo_from_db()
     

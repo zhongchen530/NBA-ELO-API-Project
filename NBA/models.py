@@ -56,3 +56,4 @@ class HistoricalPlayerElo(models.Model):
 
     def __str__(self):
         return str(self.player_id) + " " + self.date + " " + str(self.elo)
+
