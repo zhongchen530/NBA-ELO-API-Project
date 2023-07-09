@@ -9,6 +9,7 @@ from NBA.nba_api_helper import NBA_ApiHelper
 from NBA.reformat import reformat
 import pandas as pd
 from NBA.name_enums import DfColumnNames,TableColumnNames
+import os
 
 def elo_diff(elo1,elo2,wl):
     p1_win = 1/(1+10**((elo2-elo1)/400))
@@ -18,6 +19,8 @@ def elo_diff(elo1,elo2,wl):
         score = 0
     elif wl == "T":
         score = 0.5
+    else:
+        return 0
     return 32*(score - p1_win)
 
 def get_seasons_list():
@@ -130,13 +133,14 @@ class ComputePlayers:
                     HistoricalPlayerElo(elo = player_elo.elo,date = game.game_date, player_id = player_elo.player_id).save()
 
 def run():
-    for season in get_seasons_list():
-        df = ComputeTeams.get_team_games_df(season)
-        ComputeTeams.write_games_with_df(df)
-    ComputeTeams.compute_team_elo_from_db()
+    if os.environ.get("db_is_empty",False):
+        for season in get_seasons_list():
+            df = ComputeTeams.get_team_games_df(season)
+            ComputeTeams.write_games_with_df(df) 
+        ComputeTeams.compute_team_elo_from_db(elo_diff=elo_diff)
 
-    for season in get_seasons_list():
-        df = ComputePlayers.get_playergamelogs_df(season)
-        ComputePlayers.write_playergamelogs_with_df(df)
-    ComputePlayers.compute_player_elo_from_db()
+        for season in get_seasons_list():
+            df = ComputePlayers.get_playergamelogs_df(season)
+            ComputePlayers.write_playergamelogs_with_df(df)
+        ComputePlayers.compute_player_elo_from_db(elo_diff = elo_diff)
     

@@ -27,6 +27,8 @@ class Update:
         return df
 
     def update_data():
+        print("updated....")
+        return
         new_games = Update.get_new_games()
         new_playerlogs = Update.get_new_playerlogs()
         ComputeTeams.write_games_with_df(new_games)

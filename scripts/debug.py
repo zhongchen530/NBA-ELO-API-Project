@@ -12,7 +12,10 @@ from . import initial_compute
  """
 from NBA.name_enums import DfColumnNames,TableColumnNames
 from nba_api.stats.endpoints import playergamelogs
-
+from NBA.nba_api_helper import NBA_ApiHelper
+from nba_api.stats.static import teams
 def run():
-   pass
+   #print([ team["name"] for team in teams.get_teams() if team["id"] == 1612709902])
+   #print(NBA_ApiHelper.get_team_name(1612709888))
+   print(len(teams.get_teams()))
 
