@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 import NBA.update as update
-from scripts.initial_compute import elo_diff,ComputePlayers,ComputeTeams
+from NBA.initial_compute import elo_diff,ComputePlayers,ComputeTeams
 from nba_api.stats.library.parameters import SeasonAll
 from NBA.models import *
 import pandas as pd

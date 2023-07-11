@@ -1,5 +1,5 @@
 from django.test import TestCase, Client
-import scripts.initial_compute as initial_compute
+import NBA.initial_compute as initial_compute
 from NBA.models import *
 import pandas as pd
 from NBA.name_enums import DfColumnNames,TableColumnNames

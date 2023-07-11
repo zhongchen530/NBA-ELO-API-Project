@@ -6,7 +6,7 @@ def run():
     if PeriodicTask.objects.filter(name = "update database"):
         return
     schedule, created = IntervalSchedule.objects.get_or_create(
-        every=3600,
+        every=300,
         period=IntervalSchedule.SECONDS,
     )
 
