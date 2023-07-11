@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  django:
+    build: .
+    container_name: django_nba
+    command: bash -c "
+        python manage.py makemigrations 
+        && python manage.py migrate
+        && python manage.py runscript update_setup
+        && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+      - CELERY_BROKER=redis://redis:6379/0
+    volumes:
+      - type: bind
+        source: ./NBA
+        target: /NBA
+      - type: bind
+        source: ./scripts
+        target: /scripts
+    depends_on:
+      - pgdb
+      - redis
+  beat:
+    build: .
+    command: bash -c " python manage.py runscript update_setup
+        && celery -A NBA beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    container_name: beat_nba
+    depends_on:
+      - django
+      - redis
+      - celery
+  celery:
+    build: .
+    command: bash -c "python manage.py makemigrations 
+        && python manage.py migrate 
+        && celery -A NBA worker -l INFO"
+    volumes:
+      - type: bind
+        source: ./NBA
+        target: /NBA
+      - type: bind
+        source: ./scripts
+        target: /scripts
+    depends_on:
+        - django
+        - redis
+    container_name: celery_nba
+  pgdb:
+      image: postgres
+      environment:
+        - POSTGRES_DB=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+      volumes:
+        - pgdata:/var/lib/postgresql/data/
+      ports:
+        - "5432:5432"
+  redis:
+      image: "redis:alpine"
+      ports:
+        - "6379:6379"
+volumes:
+    pgdata:

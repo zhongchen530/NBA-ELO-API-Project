@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'django_celery_results',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -75,12 +78,18 @@ WSGI_APPLICATION = 'NBA.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+db_host = "pgdb"
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+   'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'postgres',
+        'USER': os.environ.get("POSTGRES_USER","postgres"),
+        'PASSWORD': os.environ.get("POSTGRES_PASSWORD","postgres"),
+        'HOST': db_host,
+        'PORT': 5432,
     }
 }
+
 
 
 # Password validation
@@ -123,3 +132,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#CELERY_BROKER_URL = os.environ.get("CELERY_BROKER","redis://redis:6379/0")
+#CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER","redis://redis:6379/0")
+
+redis_host = "redis"
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER","redis://" + redis_host + ":6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER","redis://" + redis_host + ":6379/0")

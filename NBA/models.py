@@ -1,5 +1,28 @@
 from django.db import models
 
+""" class PlayerRanking(models.Model):
+    player_id = models.ForeignKey("CurrentPlayerElo",primary_key=True,on_delete=models.PROTECT)
+    player_name = models.CharField(max_length=50)
+    elo = models.FloatField()
+    team_name = models.CharField(max_length=50)
+    
+    class Meta:
+        indexes = [models.Index(fields=["elo"]),]
+
+    def str(self):
+        return str(self.player_name) + str(self.elo) """
+
+""" class TeamRanking(models.Model):
+    team_id = models.ForeignKey("CurrentTeamElo",primary_key=True,on_delete=models.PROTECT)
+    team_name = models.CharField(max_length=50)
+    elo = models.FloatField()
+    
+    class Meta:
+        indexes = [models.Index(fields=["elo"]),]
+
+    def str(self):
+        return str(self.player_name) + str(self.elo)
+ """
 class Game(models.Model):
     game_id = models.IntegerField(primary_key = True)
     team_id = models.IntegerField()
@@ -31,7 +54,7 @@ class CurrentTeamElo(models.Model):
 class PlayerGame(models.Model):
     player_id = models.IntegerField()
     game_id = models.IntegerField()
-    wl = wl = models.CharField(max_length=1)
+    wl = models.CharField(max_length=1)
 
     class Meta:
         indexes = [models.Index(fields=["game_id","wl"]),]
