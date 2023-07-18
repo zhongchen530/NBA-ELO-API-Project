@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from .views import PlayerRankingView,TeamRankingView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('team-ranking/',TeamRankingView.as_view(),name = "team_ranking"),
+    path('player-ranking/',PlayerRankingView.as_view(),name = "player_ranking"),
 ]
