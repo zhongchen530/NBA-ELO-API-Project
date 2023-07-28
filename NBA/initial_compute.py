@@ -22,8 +22,14 @@ def elo_diff(elo1,elo2,wl):
         return 0
     return 32*(score - p1_win)
 
-def get_seasons_list():
-    return [f"20{str(i).zfill(2)}-{str(i+1).zfill(2)}" for i in range(23)]
+def get_seasons_list(**kargs):
+    since = os.environ.get("YEAR_SINCE",kargs["year"])
+    seasons = []
+    for year in range(since,2023):
+        from_year = str(year)
+        to_year = str(year + 1)
+        seasons.append(f"{from_year}-{to_year}")
+    return seasons
 
 def convert_str_to_date(date_str):
     return datetime.datetime.strptime(date_str,'%Y-%m-%d').date()
@@ -69,7 +75,7 @@ class ComputeTeams:
         df = pd.DataFrame(games.values())
         ComputeTeams.write_team_elo_with_df(df,elo_diff)
         
-        
+
 class ComputePlayers:
     def write_playergamelogs_with_df(df):
         player_id_name = DfColumnNames.PLAYER_ID.value

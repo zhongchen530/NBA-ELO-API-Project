@@ -81,7 +81,6 @@ class Update:
         team_ranking = []
         for elo in elos:
             if elo.team_id in TeamInfo.id_to_info:
-                print("t")
                 team_info = TeamInfo.id_to_info[elo.team_id]
                 args = {}
                 args["team_name"] = team_info["full_name"]

@@ -78,14 +78,13 @@ WSGI_APPLICATION = 'NBA.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-db_host = "pgdb"
 DATABASES = {
    'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'postgres',
         'USER': os.environ.get("POSTGRES_USER","postgres"),
         'PASSWORD': os.environ.get("POSTGRES_PASSWORD","postgres"),
-        'HOST': db_host,
+        'HOST': os.environ.get("POSTGRES_HOST","pgdb"),
         'PORT': 5432,
     }
 }
