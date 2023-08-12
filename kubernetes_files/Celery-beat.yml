@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app-deployment
+  labels:
+    app: celery-beat
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: celery-beat
+  template:
+    metadata:
+      labels:
+        app: celery-beat
+    spec:
+      containers:
+        - name: django-app
+          image: django_nba:latest
+          ports:
+            - containerPort: 8000
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+            celery -A NBA beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: password
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: dburl
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: service-config
+                  key: redishost

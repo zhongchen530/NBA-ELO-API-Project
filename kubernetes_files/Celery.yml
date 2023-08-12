@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery
+  labels:
+    app: celery
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: celery
+  template:
+    metadata:
+      labels:
+        app: celery
+    spec:
+      containers:
+        - name: django-app
+          image: django_nba:latest
+          ports:
+            - containerPort: 8000
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+            celery -A NBA worker -l INFO
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: password
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: dburl
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: service-config
+                  key: redishost

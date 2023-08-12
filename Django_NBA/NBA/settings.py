@@ -89,6 +89,24 @@ DATABASES = {
     }
 }
 
+CELERY_IMPORTS = [
+    'NBA.tasks',
+]
+
+""" DATABASES = {
+   'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'postgres',
+        'USER': "NBA",
+        'PASSWORD': "djangonba",
+        'HOST': "nba.cdv1hhbg08am.us-east-1.rds.amazonaws.com",
+        'PORT': 5432,
+    }
+} """
+
+
+
+
 
 
 # Password validation
@@ -136,6 +154,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #CELERY_BROKER_URL = os.environ.get("CELERY_BROKER","redis://redis:6379/0")
 #CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER","redis://redis:6379/0")
 
-redis_host = "redis"
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER","redis://" + redis_host + ":6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER","redis://" + redis_host + ":6379/0")
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER","redis://" + os.environ.get("REDIS_HOST","redis") + ":6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER","redis://" + os.environ.get("REDIS_HOST","redis") + ":6379/0")

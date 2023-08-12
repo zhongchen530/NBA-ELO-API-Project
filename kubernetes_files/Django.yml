@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app-deployment
+  labels:
+    app: django-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: django-app
+  template:
+    metadata:
+      labels:
+        app: django-app
+    spec:
+      containers:
+        - name: django-app
+          image: django_nba:latest
+          ports:
+            - containerPort: 8000
+          command: ["/bin/sh", "-c"]
+          args:
+          - >
+            python manage.py runscript update_setup  &&
+            python manage.py runserver 0.0.0.0:8000
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: password
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db_secret
+                  key: dburl
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: service-config
+                  key: redishost
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-app-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: django-app
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
