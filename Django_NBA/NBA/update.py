@@ -7,6 +7,7 @@ from NBA.initial_compute import elo_diff,ComputePlayers,ComputeTeams
 from .nba_api_helper import PlayerInfo,TeamInfo
 import NBA.redis_connection as redis_connection
 import json
+from .name_enums import TableColumnNames,DfColumnNames
 
 
 
@@ -16,9 +17,9 @@ class Update:
         recent_games = leaguegamefinder.LeagueGameFinder(season_nullable=season)
         df = recent_games.get_data_frames()[0]
         df = reformat(df,id_name="TEAM_ID")
-
-        new_indexs = set([indx for indx,row in df.iterrows() if len(Game.objects.filter(game_id = row["GAME_ID"]))==0])
-        df = df[df.index.isin(new_indexs)]
+    
+        old_games = set([game.game_id for game in Game.objects.all()])
+        df = df.loc[~df[DfColumnNames.GAME_ID.value].isin(old_games)]
         return df
     
     def get_new_playerlogs():
@@ -26,18 +27,25 @@ class Update:
         recent_playerlogs = playergamelogs.PlayerGameLogs(season_nullable=season)
         df = recent_playerlogs.get_data_frames()[0]
         
-        new_indexs = set([indx for indx,row in df.iterrows() if len(PlayerGame.objects.filter(game_id = row["GAME_ID"]))==0])
-        df = df[df.index.isin(new_indexs)]
+        old_games = set([game.game_id for game in PlayerGame.objects.all()])
+        df = df.loc[~df[DfColumnNames.GAME_ID.value].isin(old_games)]
         return df
 
     def update_data():
+        print("Starting update")
         new_games = Update.get_new_games()
+        print("Fetched new games")
         new_playerlogs = Update.get_new_playerlogs()
+        print("Fetched playerlogs")
         ComputeTeams.write_games_with_df(new_games)
+        print("Wrote games")
         ComputePlayers.write_playergamelogs_with_df(new_playerlogs)
+        print("Wrote playerlogs")
 
         ComputePlayers.write_player_elo_with_df(new_games,elo_diff=elo_diff)
+        print("Wrote player elo")
         ComputeTeams.write_team_elo_with_df(new_games,elo_diff=elo_diff)
+        print("Wrote team elo")
 
         Update.cache_data()
         Update.update_player_ranking()

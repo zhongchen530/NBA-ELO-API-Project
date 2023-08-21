@@ -15,6 +15,9 @@ services:
       - DEBUG=1
       - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
       - CELERY_BROKER=redis://redis:6379/0
+      - POSTGRES_PASSWORD=djangonba
+      - POSTGRES_HOST=nba.cdv1hhbg08am.us-east-1.rds.amazonaws.com
+      - POSTGRES_USER=NBA
     volumes:
       - type: bind
         source: ./Django_NBA/NBA
@@ -23,7 +26,6 @@ services:
         source: ./Django_NBA/scripts
         target: /scripts
     depends_on:
-      - pgdb
       - redis
   beat:
     build: ./Django_NBA
@@ -34,7 +36,13 @@ services:
       - django
       - redis
       - celery
-      - pgdb
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+      - CELERY_BROKER=redis://redis:6379/0
+      - POSTGRES_PASSWORD=djangonba
+      - POSTGRES_HOST=nba.cdv1hhbg08am.us-east-1.rds.amazonaws.com
+      - POSTGRES_USER=NBA
   celery:
     build: ./Django_NBA
     command: bash -c "python manage.py makemigrations 
@@ -50,21 +58,15 @@ services:
     depends_on:
         - django
         - redis
-        - pgdb
     container_name: celery_nba
-  pgdb:
-      image: postgres
-      environment:
-        - POSTGRES_DB=postgres
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=postgres
-      volumes:
-        - pgdata:/var/lib/postgresql/data/
-      ports:
-        - "5432:5432"
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+      - CELERY_BROKER=redis://redis:6379/0
+      - POSTGRES_PASSWORD=djangonba
+      - POSTGRES_HOST=nba.cdv1hhbg08am.us-east-1.rds.amazonaws.com
+      - POSTGRES_USER=NBA
   redis:
       image: "redis:alpine"
       ports:
         - "6379:6379"
-volumes:
-    pgdata:

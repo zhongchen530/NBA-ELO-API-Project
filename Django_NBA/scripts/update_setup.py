@@ -1,8 +1,14 @@
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from NBA.update import Update
 
 
 # executes every 3600 seconds.
 def run():
+    print("Updating ranking")
+    Update.update_player_ranking()
+    Update.update_team_ranking()
+    print("Update setup finished")
+    
     if PeriodicTask.objects.filter(name = "update database"):
         return
     schedule, created = IntervalSchedule.objects.get_or_create(
@@ -17,3 +23,4 @@ def run():
     )
 
     update_task.save()
+
