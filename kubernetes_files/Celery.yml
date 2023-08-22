@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: django-app
-          image: django_nba:latest
+          image: djangonba.azurecr.io/django_nba:latest
           ports:
             - containerPort: 8000
           command: ["/bin/sh", "-c"]
@@ -27,17 +27,17 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: db_secret
+                  name: db-secret
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: db_secret
+                  name: db-secret
                   key: password
             - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
-                  name: db_secret
+                  name: db-secret
                   key: dburl
             - name: REDIS_HOST
               valueFrom:
